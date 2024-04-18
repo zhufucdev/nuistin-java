@@ -12,14 +12,14 @@ import java.net.NetworkInterface;
 import java.net.URI;
 import java.net.http.HttpRequest;
 
-public class Authentication {
+public class Authenticator {
     private final AsyncHttpClient httpClient;
     private final String authUrl;
     private final NetworkInterface nic;
 
     private final AsyncSubject<State> state;
 
-    public Authentication(String authUrl, NetworkInterface networkInterface) {
+    public Authenticator(String authUrl, NetworkInterface networkInterface) {
         this.authUrl = authUrl;
         httpClient = new AsyncHttpClient();
         nic = networkInterface;

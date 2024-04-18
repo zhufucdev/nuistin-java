@@ -1,6 +1,6 @@
 import com.javamasters.model.Account;
 import com.javamasters.model.ISP;
-import com.javamasters.net.Authentication;
+import com.javamasters.net.Authenticator;
 import org.junit.jupiter.api.Test;
 
 import java.net.NetworkInterface;
@@ -8,7 +8,7 @@ import java.net.SocketException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuthenticationTest {
+class AuthenticatorTest {
 
     @Test
     void login() throws SocketException {
@@ -18,8 +18,8 @@ class AuthenticationTest {
         var isp = ISP.valueOf(System.getenv("ISP"));
         var nicName = System.getenv("NIC");
 
-        var auth = new Authentication(server, NetworkInterface.getByName(nicName));
+        var auth = new Authenticator(server, NetworkInterface.getByName(nicName));
         assertTrue(auth.login(new Account(id, password, isp)).blockingGet());
-        assertEquals(auth.getState().blockingFirst(), Authentication.State.Online);
+        assertEquals(auth.getState().blockingFirst(), Authenticator.State.Online);
     }
 }
