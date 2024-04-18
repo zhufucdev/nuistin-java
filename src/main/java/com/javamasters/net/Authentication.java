@@ -7,6 +7,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.subjects.AsyncSubject;
 
+import java.net.Inet4Address;
 import java.net.NetworkInterface;
 import java.net.URI;
 import java.net.http.HttpRequest;
@@ -39,17 +40,26 @@ public class Authentication {
 
     private Single<LoginRequest> dispatchLoginRequest(Account account) {
         var iter = nic.getInetAddresses();
-        if (iter.hasMoreElements()) {
+        if (!iter.hasMoreElements()) {
             return Single.error(new NullPointerException("No ip addresses found"));
         }
-        var addr = iter.nextElement().getHostAddress();
+        var addr = iter.nextElement();
+        while (iter.hasMoreElements()) {
+            if (addr instanceof Inet4Address) {
+                break;
+            }
+            addr = iter.nextElement();
+        }
+        if (!(addr instanceof Inet4Address)) {
+            return Single.error(new IllegalArgumentException("selected network interface has no ipv4 addresses"));
+        }
+
         return Single.just(new LoginRequest(
                 account.id(), account.password(),
                 "0", String.valueOf(account.isp().channel),
-                "secondauth", addr
+                "secondauth", addr.getHostAddress()
         ));
     }
-
 
     public enum State {
         Unspecified, Online, Unauthenticated, Offline
