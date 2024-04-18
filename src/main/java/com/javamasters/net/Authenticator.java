@@ -5,11 +5,11 @@ import com.javamasters.model.LoginRequest;
 import com.javamasters.model.LoginResponse;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.AsyncSubject;
 
-import java.net.Inet4Address;
-import java.net.NetworkInterface;
-import java.net.URI;
+import java.net.*;
 import java.net.http.HttpRequest;
 
 public class Authenticator {
@@ -18,6 +18,19 @@ public class Authenticator {
     private final NetworkInterface nic;
 
     private final AsyncSubject<State> state;
+
+    public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
+        this(authUrl, networkInterface);
+
+        dispatchPing(pingAddress)
+                .subscribeOn(Schedulers.io())
+                .subscribe(pong -> {
+                    if (state.getValue() == null) {
+                        state.onNext(State.Online);
+                        state.onComplete();
+                    }
+                });
+    }
 
     public Authenticator(String authUrl, NetworkInterface networkInterface) {
         this.authUrl = authUrl;
@@ -72,6 +85,17 @@ public class Authenticator {
                 "0", String.valueOf(account.isp().channel),
                 "secondauth", addr.getHostAddress()
         ));
+    }
+
+    private Single<Boolean> dispatchPing(String address) {
+        return Single.create((SingleEmitter<Boolean> emitter) -> {
+            try {
+                var addr = InetAddress.getByName(address);
+                emitter.onSuccess(addr.isReachable(10000));
+            } catch (UnknownHostException e) {
+                emitter.onSuccess(false);
+            }
+        });
     }
 
     public enum State {
