@@ -109,7 +109,7 @@ public class Authenticator {
         return Single.create((SingleEmitter<Boolean> emitter) -> {
             try {
                 var addr = InetAddress.getByName(address);
-                emitter.onSuccess(addr.isReachable(10000));
+                emitter.onSuccess(addr.isReachable(nic, 32, 10000));
             } catch (UnknownHostException e) {
                 emitter.onSuccess(false);
             }
