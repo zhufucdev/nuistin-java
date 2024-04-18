@@ -20,5 +20,6 @@ class AuthenticationTest {
 
         var auth = new Authentication(server, NetworkInterface.getByName(nicName));
         assertTrue(auth.login(new Account(id, password, isp)).blockingGet());
+        assertEquals(auth.getState().blockingFirst(), Authentication.State.Online);
     }
 }

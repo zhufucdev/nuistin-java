@@ -17,7 +17,7 @@ public class Authentication {
     private final String authUrl;
     private final NetworkInterface nic;
 
-    public final Observable<State> state;
+    private final AsyncSubject<State> state;
 
     public Authentication(String authUrl, NetworkInterface networkInterface) {
         this.authUrl = authUrl;
@@ -26,8 +26,12 @@ public class Authentication {
         state = AsyncSubject.create();
     }
 
+    public Observable<State> getState() {
+        return state;
+    }
+
     public Single<Boolean> login(Account account) {
-        return dispatchLoginRequest(account)
+        var single = dispatchLoginRequest(account)
                 .concatMap(req -> {
                     var loginRequest = HttpRequest.newBuilder()
                             .uri(URI.create(authUrl + "/api/v1/login"))
@@ -36,6 +40,15 @@ public class Authentication {
                     return httpClient.send(loginRequest, JsonDelegating.bodyHandler(LoginResponse.class));
                 })
                 .map(res -> res.code() == 200);
+        single.subscribe(loggedIn -> {
+            if (loggedIn) {
+                state.onNext(State.Online);
+            } else {
+                state.onNext(State.Unauthenticated);
+            }
+            state.onComplete();
+        });
+        return single;
     }
 
     private Single<LoginRequest> dispatchLoginRequest(Account account) {
