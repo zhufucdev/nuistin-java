@@ -16,10 +16,12 @@ class AuthenticatorTest {
     String nicName = System.getenv("NIC");
 
     @Test
-    void login() throws SocketException {
+    void login_logout() throws SocketException {
         var auth = new Authenticator(server, NetworkInterface.getByName(nicName));
         assertTrue(auth.login(new Account(id, password, isp)).blockingGet());
-        assertEquals(auth.getState().blockingFirst(), Authenticator.State.Online);
+        assertEquals(Authenticator.State.Online, auth.getState().blockingLast());
+
+        assertTrue(auth.logout().blockingGet());
     }
 
     @Test

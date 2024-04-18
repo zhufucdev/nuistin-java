@@ -10,7 +10,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.AsyncSubject;
 
 import java.net.*;
-import java.net.http.HttpRequest;
 
 public class Authenticator {
     private final AsyncHttpClient httpClient;
@@ -18,6 +17,7 @@ public class Authenticator {
     private final NetworkInterface nic;
 
     private final AsyncSubject<State> state;
+    private Account account;
 
     public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
         this(authUrl, networkInterface);
@@ -44,27 +44,37 @@ public class Authenticator {
     }
 
     public Single<Boolean> login(Account account) {
-        var single = dispatchLoginRequest(account)
-                .concatMap(req -> {
-                    var loginRequest = HttpRequest.newBuilder()
-                            .uri(URI.create(authUrl + "/api/v1/login"))
-                            .POST(JsonDelegating.bodyPublisher(req))
-                            .build();
-                    return httpClient.send(loginRequest, JsonDelegating.bodyHandler(LoginResponse.class));
-                })
-                .map(res -> res.code() == 200);
-        single.subscribe(loggedIn -> {
-            if (loggedIn) {
-                state.onNext(State.Online);
-            } else {
-                state.onNext(State.Unauthenticated);
-            }
-            state.onComplete();
-        });
-        return single;
+        return dispatchLoginRequest(account)
+                .concatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+                .map(res -> res.code() == 200)
+                .doOnSuccess(loggedIn -> {
+                    if (loggedIn) {
+                        state.onNext(State.Online);
+                        this.account = account;
+                    } else {
+                        state.onNext(State.Unauthenticated);
+                    }
+                    state.onComplete();
+                });
     }
 
-    private Single<LoginRequest> dispatchLoginRequest(Account account) {
+    public Single<Boolean> logout() {
+        final var account = this.account;
+        if (account == null) {
+            return Single.error(new IllegalStateException("Never logged in"));
+        }
+        return dispatchLogoutRequest(account)
+                .concatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+                .map(res -> res.code() == 200)
+                .doOnSuccess(loggedOut -> {
+                    if (loggedOut) {
+                        state.onNext(State.Offline);
+                        state.onComplete();
+                    }
+                });
+    }
+
+    private Single<LoginRequest> dispatchLoginBase(Account account, String pagesign, String ifautologin) {
         var iter = nic.getInetAddresses();
         if (!iter.hasMoreElements()) {
             return Single.error(new NullPointerException("No ip addresses found"));
@@ -82,9 +92,17 @@ public class Authenticator {
 
         return Single.just(new LoginRequest(
                 account.id(), account.password(),
-                "0", String.valueOf(account.isp().channel),
-                "secondauth", addr.getHostAddress()
+                ifautologin, String.valueOf(account.isp().channel),
+                pagesign, addr.getHostAddress()
         ));
+    }
+
+    private Single<LoginRequest> dispatchLoginRequest(Account account) {
+        return dispatchLoginBase(account, "secondauth", "0");
+    }
+
+    private Single<LoginRequest> dispatchLogoutRequest(Account account) {
+        return dispatchLoginBase(account, "thirdauth", "1");
     }
 
     private Single<Boolean> dispatchPing(String address) {
