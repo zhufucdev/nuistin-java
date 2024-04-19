@@ -6,15 +6,18 @@ import com.javamasters.net.model.LoginResponse;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.AsyncSubject;
 
 import java.net.*;
 
-public class Authenticator {
+public class Authenticator implements Disposable {
     private final AsyncHttpClient httpClient;
     private final String authUrl;
     private final NetworkInterface nic;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final AsyncSubject<State> state;
     private Account account;
@@ -22,7 +25,8 @@ public class Authenticator {
     public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
         this(authUrl, networkInterface);
 
-        dispatchPing(pingAddress)
+
+        var ping = dispatchPing(pingAddress)
                 .subscribeOn(Schedulers.io())
                 .subscribe(pong -> {
                     if (state.getValue() == null) {
@@ -30,6 +34,7 @@ public class Authenticator {
                         state.onComplete();
                     }
                 });
+        disposables.add(ping);
     }
 
     public Authenticator(String authUrl, NetworkInterface networkInterface) {
@@ -114,6 +119,16 @@ public class Authenticator {
                 emitter.onSuccess(false);
             }
         });
+    }
+
+    @Override
+    public void dispose() {
+        disposables.dispose();
+    }
+
+    @Override
+    public boolean isDisposed() {
+        return disposables.isDisposed();
     }
 
     public enum State {

@@ -22,11 +22,14 @@ class AuthenticatorTest {
         assertEquals(Authenticator.State.Online, auth.getState().blockingLast());
 
         assertTrue(auth.logout().blockingGet());
+
+        auth.dispose();
     }
 
     @Test
     void state() throws SocketException {
         var auth = new Authenticator(server, "google.com", NetworkInterface.getByName(nicName));
         assertNotEquals(Authenticator.State.Unspecified, auth.getState().blockingFirst());
+        auth.dispose();
     }
 }
