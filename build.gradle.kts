@@ -14,6 +14,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     implementation("io.reactivex.rxjava3:rxjava:3.1.8")
     implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.github.javakeyring:java-keyring:1.0.4")
 }
 
 tasks.test {
