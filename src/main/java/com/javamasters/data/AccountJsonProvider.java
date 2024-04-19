@@ -31,7 +31,7 @@ public class AccountJsonProvider implements AccountProvider {
                     var buf = ips.readAllBytes();
                     ips.close();
                     var json = new String(buf, StandardCharsets.UTF_8);
-                    accounts = gson.fromJson(json, new TypeToken<>() {
+                    accounts = gson.fromJson(json, new TypeToken<ArrayList<Account>>() {
                     }.getType());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -50,7 +50,7 @@ public class AccountJsonProvider implements AccountProvider {
     private void saveAccounts() throws IOException {
         var json = gson.toJson(accounts, new TypeToken<ArrayList<Account>>() {
         }.getType());
-        var buf = cipher.encrypt(StandardCharsets.UTF_8.encode(json).array());
+        var buf = cipher.encrypt(json.getBytes(StandardCharsets.UTF_8));
         if (dataIO.available()) {
             try (var ops = dataIO.openOutputStream()) {
                 ops.write(buf);
