@@ -3,32 +3,33 @@ package com.javamasters.data;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.javamasters.cipher.EncryptDecrypt;
+import com.javamasters.data.io.DataIO;
 import com.javamasters.model.Account;
 import io.reactivex.rxjava3.core.Single;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-public class LocalAccountProvider implements AccountProvider {
+public class AccountJsonProvider implements AccountProvider {
     private ArrayList<Account> accounts;
     private final Gson gson = new Gson();
-    private final File dataFile;
+    private final DataIO dataIO;
     private final EncryptDecrypt cipher;
 
-    public LocalAccountProvider(File dataFile, EncryptDecrypt cipher) {
-        this.dataFile = dataFile;
+    public AccountJsonProvider(DataIO dataIO, EncryptDecrypt cipher) {
+        this.dataIO = dataIO;
         this.cipher = cipher;
     }
 
     private void ensureAccounts() {
         if (accounts == null) {
-            if (dataFile.exists()) {
-                try {
-                    var buf = Files.readAllBytes(dataFile.toPath());
+            if (dataIO.created()) {
+                try (var ips = dataIO.openInputStream()) {
+                    var buf = ips.readAllBytes();
+                    ips.close();
                     var json = new String(buf, StandardCharsets.UTF_8);
                     accounts = gson.fromJson(json, new TypeToken<>() {
                     }.getType());
@@ -36,11 +37,11 @@ public class LocalAccountProvider implements AccountProvider {
                     throw new RuntimeException(e);
                 }
             } else {
-                accounts = new ArrayList<>();
                 try {
+                    accounts = new ArrayList<>();
                     saveAccounts();
                 } catch (IOException e) {
-                    // ignored
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -50,7 +51,15 @@ public class LocalAccountProvider implements AccountProvider {
         var json = gson.toJson(accounts, new TypeToken<ArrayList<Account>>() {
         }.getType());
         var buf = cipher.encrypt(StandardCharsets.UTF_8.encode(json).array());
-        Files.write(dataFile.toPath(), buf);
+        if (dataIO.available()) {
+            try (var ops = dataIO.openOutputStream()) {
+                ops.write(buf);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            throw new IOException("Data IO unavailable");
+        }
     }
 
     @Override
