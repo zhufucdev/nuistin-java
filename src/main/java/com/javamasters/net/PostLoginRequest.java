@@ -1,6 +1,6 @@
 package com.javamasters.net;
 
-import com.javamasters.model.LoginRequest;
+import com.javamasters.net.model.LoginRequest;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.functions.Function;
 

@@ -1,8 +1,8 @@
 package com.javamasters.net;
 
 import com.javamasters.model.Account;
-import com.javamasters.model.LoginRequest;
-import com.javamasters.model.LoginResponse;
+import com.javamasters.net.model.LoginRequest;
+import com.javamasters.net.model.LoginResponse;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.core.SingleEmitter;
