@@ -10,7 +10,7 @@ import java.security.spec.InvalidKeySpecException;
 public class AesCipher implements EncryptDecrypt {
     private final Cipher cipher;
     private final Key key;
-    private final byte[] salt;
+    private final byte[] salt = new byte[8];
 
     public AesCipher(String passphrase) {
         try {
@@ -19,7 +19,8 @@ public class AesCipher implements EncryptDecrypt {
             cipher = Cipher.getInstance("PBEWithMD5AndDES");
 
             var md = MessageDigest.getInstance("SHA-1");
-            salt = md.digest(passphrase.getBytes(StandardCharsets.UTF_8));
+            var sha = md.digest(passphrase.getBytes(StandardCharsets.UTF_8));
+            System.arraycopy(sha, 0, salt, 0, 8);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException e) {
             throw new RuntimeException(e);
         }
