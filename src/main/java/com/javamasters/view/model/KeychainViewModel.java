@@ -1,7 +1,7 @@
 package com.javamasters.view.model;
 
 import com.javamasters.model.Account;
-import com.javamasters.view.AccountProvider;
+import com.javamasters.data.AccountProvider;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
@@ -34,7 +34,7 @@ public class KeychainViewModel implements Disposable {
         return provider.addAccount(account)
                 .subscribeOn(Schedulers.io())
                 .concatMap(added -> added
-                        ? accountIds.first(new ArrayList<>())
+                        ? accountIds.last(new ArrayList<>())
                         .map(v -> {
                             var next = Stream.concat(v.stream(), Stream.of(account.id())).toList();
                             accountIds.onNext(next);
@@ -43,6 +43,25 @@ public class KeychainViewModel implements Disposable {
                         })
                         : Single.just(false)
                 );
+    }
+
+    public Single<Boolean> removeAccount(Account account) {
+        return provider.removeAccount(account)
+                .subscribeOn(Schedulers.io())
+                .concatMap(removed -> removed
+                        ? accountIds.last(new ArrayList<>())
+                        .map(v -> {
+                            var next = v.stream().filter(e -> !e.equals(account.id())).toList();
+                            accountIds.onNext(next);
+                            accountIds.onComplete();
+                            return true;
+                        })
+                        : Single.just(false)
+                );
+    }
+
+    public Single<Account> getAccount(String id) {
+        return provider.getAccount(id);
     }
 
     @Override

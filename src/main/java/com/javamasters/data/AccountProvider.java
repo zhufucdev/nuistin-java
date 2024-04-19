@@ -1,4 +1,4 @@
-package com.javamasters.view;
+package com.javamasters.data;
 
 import com.javamasters.model.Account;
 import io.reactivex.rxjava3.core.Single;
