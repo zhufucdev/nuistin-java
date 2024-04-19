@@ -6,6 +6,7 @@ import javax.crypto.spec.PBEParameterSpec;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 
 public class AesCipher implements EncryptDecrypt {
     private final Cipher cipher;
@@ -20,7 +21,7 @@ public class AesCipher implements EncryptDecrypt {
 
             var md = MessageDigest.getInstance("SHA-1");
             var sha = md.digest(passphrase.getBytes(StandardCharsets.UTF_8));
-            System.arraycopy(sha, 0, salt, 0, 8);
+            System.arraycopy(sha, 0, salt, 0, salt.length);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchPaddingException e) {
             throw new RuntimeException(e);
         }
@@ -30,7 +31,7 @@ public class AesCipher implements EncryptDecrypt {
     public byte[] encrypt(byte[] data) {
         try {
             cipher.init(Cipher.ENCRYPT_MODE, key, new PBEParameterSpec(salt, 20));
-            return cipher.doFinal(data);
+            return Base64.getEncoder().encode(cipher.doFinal(data));
         } catch (InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  BadPaddingException e) {
             throw new RuntimeException(e);
@@ -41,7 +42,7 @@ public class AesCipher implements EncryptDecrypt {
     public byte[] decrypt(byte[] data) {
         try {
             cipher.init(Cipher.DECRYPT_MODE, key, new PBEParameterSpec(salt, 20));
-            return cipher.doFinal(data);
+            return cipher.doFinal(Base64.getDecoder().decode(data));
         } catch (InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException |
                  BadPaddingException e) {
             throw new RuntimeException(e);
