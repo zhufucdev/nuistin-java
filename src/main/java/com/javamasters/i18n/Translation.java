@@ -35,7 +35,7 @@ public class Translation {
         translations = obj;
     }
 
-    String getString(String key, Object... args) {
+    public String getString(String key, Object... args) {
         var format = translations.get(key).getAsString();
         return String.format(format, args);
     }
