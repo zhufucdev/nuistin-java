@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "name": "English (Any Region)",
+    "iso": "en"
+  },
+  "app_name": "nuistin",
+  "username": "Username",
+  "password": "Password",
+  "signin": "Sign in"
+}

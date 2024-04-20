@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "name": "中文（任何地区）",
+    "iso": "zh"
+  },
+  "app_name": "nuistin",
+  "username": "用户名",
+  "password": "密码",
+  "signin": "登录"
+}
