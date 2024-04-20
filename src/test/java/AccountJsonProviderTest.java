@@ -1,7 +1,7 @@
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.javamasters.cipher.NoCipher;
-import com.javamasters.data.AccountJsonProvider;
+import com.javamasters.data.impl.AccountJsonProvider;
 import com.javamasters.data.io.MemoryIO;
 import com.javamasters.model.Account;
 import com.javamasters.model.ISP;
