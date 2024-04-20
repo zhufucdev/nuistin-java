@@ -7,8 +7,7 @@ import io.reactivex.rxjava3.subjects.Subject;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.TextListener;
+import java.awt.event.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -33,13 +32,10 @@ public class ReactiveUi implements Disposable {
     }
 
     public void twoWayBindText(TextComponent textComponent, Subject<String> subject) {
+        subject.onNext(textComponent.getText());
         disposables.add(new EventListenerDisposable(textComponent, "Text", (TextListener) e -> {
             var text = textComponent.getText();
-            if (text.equals(subject.blockingLast())) {
-                return;
-            }
             subject.onNext(text);
-            subject.onComplete();
         }));
         disposables.add(subject.subscribe(s -> {
             if (s.equals(textComponent.getText())) {
@@ -50,10 +46,45 @@ public class ReactiveUi implements Disposable {
     }
 
     public void twoWayBindPassword(JPasswordField passwordField, Subject<String> subject) {
-        disposables.add(new EventListenerDisposable(passwordField, "Action", (ActionListener) e -> {
-            var password = new String(passwordField.getPassword());
-            subject.onNext(password);
+        subject.onNext(new String(passwordField.getPassword()));
+        disposables.add(new EventListenerDisposable(passwordField, "Focus", new FocusListener() {
+            void notifyChange() {
+                var password = new String(passwordField.getPassword());
+                subject.onNext(password);
+            }
+
+            @Override
+            public void focusGained(FocusEvent e) {
+                notifyChange();
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                notifyChange();
+            }
         }));
+        disposables.add(new EventListenerDisposable(passwordField, "Key", new KeyListener() {
+            void notifyChange() {
+                var password = new String(passwordField.getPassword());
+                subject.onNext(password);
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                notifyChange();
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                notifyChange();
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                notifyChange();
+            }
+        }));
+
         disposables.add(subject.subscribe(p -> {
             var password = new String(passwordField.getPassword());
             if (p.equals(password)) {
