@@ -9,7 +9,7 @@ import com.javamasters.data.Settings;
 import com.javamasters.data.io.DataIO;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.subjects.AsyncSubject;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,7 +20,7 @@ import java.util.Objects;
 public class SettingsJsonProvider implements Settings {
     private final DataIO dataIO;
     private final Gson gson;
-    private final AsyncSubject<String> language = AsyncSubject.create();
+    private final BehaviorSubject<String> language = BehaviorSubject.create();
     private JsonObject obj;
 
     public SettingsJsonProvider(DataIO dataIO) {
@@ -56,7 +56,6 @@ public class SettingsJsonProvider implements Settings {
         }.getType());
 
         language.onNext(obj.get("language").getAsString());
-        language.onComplete();
     }
 
     private boolean saveObj() throws IOException {

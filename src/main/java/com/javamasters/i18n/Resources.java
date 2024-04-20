@@ -2,12 +2,12 @@ package com.javamasters.i18n;
 
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
-import io.reactivex.rxjava3.subjects.AsyncSubject;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import java.util.Locale;
 
 public class Resources implements Disposable {
-    private final AsyncSubject<Translation> translation = AsyncSubject.create();
+    private final BehaviorSubject<Translation> translation = BehaviorSubject.create();
     private final Disposable delegatedDisposable;
 
     public Resources(Observable<String> language) {
@@ -23,12 +23,15 @@ public class Resources implements Disposable {
                 throw new NullPointerException("No such translation: " + l);
             }
             translation.onNext(next);
-            translation.onComplete();
         });
     }
 
     public Observable<String> getString(String key, Object ...args) {
         return translation.map(t -> t.getString(key, args));
+    }
+
+    public Observable<Translation> getTranslation() {
+        return translation;
     }
 
     @Override
