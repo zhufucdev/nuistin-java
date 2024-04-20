@@ -6,5 +6,9 @@
   "app_name": "nuistin",
   "username": "Username",
   "password": "Password",
-  "signin": "Sign in"
+  "signin": "Sign in",
+  "campus": "Campus",
+  "mobile": "China Mobile",
+  "telecom": "China Telecom",
+  "unicom": "China Unicom"
 }

@@ -6,5 +6,9 @@
   "app_name": "nuistin",
   "username": "用户名",
   "password": "密码",
-  "signin": "登录"
+  "signin": "登录",
+  "campus": "校园网",
+  "mobile": "中国移动",
+  "telecom": "中国电信",
+  "unicom": "中国联通"
 }

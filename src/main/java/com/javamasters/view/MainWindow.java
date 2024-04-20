@@ -47,14 +47,15 @@ public class MainWindow extends Frame implements WindowListener {
         add(new Component(){}, fillHeight);
         add(signInButton, fillWidth);
         setSize(400, 300);
-        setMinimumSize(new Dimension(200, 170));
+        setMinimumSize(new Dimension(400, 220));
         addWindowListener(this);
+
+        rui.bindLabel(signInButton, library.getResources().getString("signin"));
+        rui.bindTitle(this, library.getResources().getString("app_name"));
     }
 
     @Override
     public void windowOpened(WindowEvent e) {
-        rui.bindLabel(signInButton, library.getResources().getString("signin"));
-        rui.bindTitle(this, library.getResources().getString("app_name"));
     }
 
     @Override
@@ -83,7 +84,6 @@ public class MainWindow extends Frame implements WindowListener {
 
     @Override
     public void windowDeactivated(WindowEvent e) {
-
     }
 
     @Override

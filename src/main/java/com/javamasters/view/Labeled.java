@@ -3,13 +3,14 @@ package com.javamasters.view;
 import javax.swing.*;
 import java.awt.*;
 
-public class LabeledTextField extends Container {
-    public final TextField textField = new TextField();
+public class Labeled extends Container {
+    public final Component field;
     public final Label label = new Label();
 
-    public LabeledTextField() {
+    public Labeled(Component field) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.field = field;
         add(label);
-        add(textField);
+        add(field);
     }
 }
