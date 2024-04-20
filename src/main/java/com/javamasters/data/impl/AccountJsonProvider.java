@@ -29,7 +29,7 @@ public class AccountJsonProvider implements AccountProvider {
         if (accounts == null) {
             if (dataIO.created()) {
                 try (var ips = dataIO.openInputStream()) {
-                    var buf = ips.readAllBytes();
+                    var buf = cipher.decrypt(ips.readAllBytes());
                     ips.close();
                     var json = new String(buf, StandardCharsets.UTF_8);
                     accounts = gson.fromJson(json, new TypeToken<ArrayList<Account>>() {
