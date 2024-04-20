@@ -8,12 +8,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public class Translation {
     public record Metadata(String name, String iso) {
@@ -47,7 +46,11 @@ public class Translation {
         var rootUrl = Translation.class.getClassLoader().getResource("translations");
         Objects.requireNonNull(rootUrl);
         try {
-            Files.walk(Path.of(rootUrl.toURI())).skip(1).forEach(path -> {
+            var uri = rootUrl.toURI();
+            Map<String, String> env = new HashMap<>();
+            env.put("create", "true");
+            FileSystem zipfs = FileSystems.newFileSystem(uri, env);
+            Files.walk(Path.of(uri)).skip(1).forEach(path -> {
                 try {
                     var url = path.toUri().toURL();
                     var translation = new Translation(url);
@@ -57,6 +60,7 @@ public class Translation {
                     e.printStackTrace();
                 }
             });
+            zipfs.close();
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
