@@ -28,6 +28,10 @@ public class ReactiveUi implements Disposable {
         disposables.add(observable.subscribe(frame::setTitle));
     }
 
+    public void bindEnabled(Component button, Observable<Boolean> observable) {
+        disposables.add(observable.subscribe(button::setEnabled));
+    }
+
     public void twoWayBindText(TextComponent textComponent, Subject<String> subject) {
         disposables.add(new EventListenerDisposable(textComponent, "Text", (TextListener) e -> {
             var text = textComponent.getText();
