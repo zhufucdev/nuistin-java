@@ -7,7 +7,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SignInForm extends Container {
-    private final LabeledTextField username = new LabeledTextField(), password = new LabeledTextField();
+    private final LabeledTextField username = new LabeledTextField() {
+        @Override
+        public Insets getInsets() {
+            return new Insets(0, 0, 10, 0);
+        }
+    }, password = new LabeledTextField();
     private final KeychainViewModel keychain;
 
     private final ReactiveUi rui = new ReactiveUi();
@@ -17,8 +22,7 @@ public class SignInForm extends Container {
 
         add(username);
         add(password);
-        var layout = new BoxLayout(this, BoxLayout.Y_AXIS);
-        setLayout(layout);
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         rui.bindText(username.label, resources.getString("username"));
         rui.bindText(password.label, resources.getString("password"));

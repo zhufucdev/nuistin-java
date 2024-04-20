@@ -32,7 +32,7 @@ public class MainWindow extends Frame implements WindowListener {
         var header = new Container() {
             @Override
             public Insets getInsets() {
-                return new Insets(5, 5, 5, 5);
+                return new Insets(12, 12, 12, 12);
             }
         };
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
@@ -47,7 +47,7 @@ public class MainWindow extends Frame implements WindowListener {
         add(new Component(){}, fillHeight);
         add(signInButton, fillWidth);
         setSize(400, 300);
-        setMinimumSize(new Dimension(200, 200));
+        setMinimumSize(new Dimension(200, 170));
         addWindowListener(this);
     }
 
