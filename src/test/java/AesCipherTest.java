@@ -1,5 +1,4 @@
-package com.javamasters.cipher;
-
+import com.javamasters.cipher.AesCipher;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
