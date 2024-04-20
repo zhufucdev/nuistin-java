@@ -3,7 +3,7 @@ package com.javamasters.data.io;
 import java.io.*;
 
 public class FileIO implements DataIO {
-    private File file;
+    private final File file;
 
     public FileIO(File file) {
         this.file = file;
