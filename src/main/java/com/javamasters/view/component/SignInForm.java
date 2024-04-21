@@ -11,17 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 
 public class SignInForm extends Container {
-    private final Labeled usernameLabel = new Labeled(new TextField()) {
-        @Override
-        public Insets getInsets() {
-            return new Insets(0, 4, 10, 6);
-        }
-    }, passwordLabel = new Labeled(new JPasswordField()) {
-        @Override
-        public Insets getInsets() {
-            return new Insets(0, 4, 18, 6);
-        }
-    };
     private final Choice ispDropdown = new Choice();
     private final KeychainViewModel keychain;
 
@@ -34,16 +23,27 @@ public class SignInForm extends Container {
 
     public SignInForm(KeychainViewModel keychain, Resources resources) {
         this.keychain = keychain;
-
+        var usernameLabel = new Labeled<>(new TextField()) {
+            @Override
+            public Insets getInsets() {
+                return new Insets(0, 4, 10, 6);
+            }
+        };
         add(usernameLabel);
+        var passwordLabel = new Labeled<>(new JPasswordField()) {
+            @Override
+            public Insets getInsets() {
+                return new Insets(0, 4, 18, 6);
+            }
+        };
         add(passwordLabel);
         add(ispDropdown);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         rui.bindText(usernameLabel.label, resources.getString("username"));
         rui.bindText(passwordLabel.label, resources.getString("password"));
-        rui.twoWayBindText((TextComponent) usernameLabel.field, username);
-        rui.twoWayBindPassword((JPasswordField) passwordLabel.field, password);
+        rui.twoWayBindText(usernameLabel.field, username);
+        rui.twoWayBindPassword(passwordLabel.field, password);
 
         disposables.add(
                 resources.getTranslation().subscribe(t -> {
