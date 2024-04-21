@@ -53,8 +53,7 @@ public class Authenticator implements Disposable {
                 });
     }
 
-    public Single<Boolean> logout() {
-        final var account = this.account;
+    public Single<Boolean> logout(Account account) {
         if (account == null) {
             return Single.error(new IllegalStateException("Never logged in"));
         }
@@ -66,6 +65,10 @@ public class Authenticator implements Disposable {
                         state.onNext(State.Unauthenticated);
                     }
                 });
+    }
+
+    public Single<Boolean> logout() {
+        return logout(account);
     }
 
     private Single<LoginRequest> dispatchLoginBase(Account account, String pagesign, String ifautologin) {
