@@ -105,7 +105,7 @@ public class MainWindow extends Frame {
             var nw = new NetworkForm(library.getSettings(), library.getResources());
             var dialog = new Dialog(MainWindow.this);
             dialog.add(nw);
-            dialog.setSize(300, 200);
+            dialog.setSize(300, 140);
             dialog.setResizable(false);
             dialog.setVisible(true);
             dialog.addWindowListener(new WindowAdapter() {
