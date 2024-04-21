@@ -122,7 +122,7 @@ public class Authenticator implements Disposable {
     }
 
     private Single<LoginRequest> dispatchLogoutRequest(Account account) {
-        return dispatchLoginBase(account, String.valueOf(account.isp().channel), "thirdauth", "1");
+        return dispatchLoginBase(account, "0", "thirdauth", "1");
     }
 
     private Single<State> dispatchPing(String address) {
