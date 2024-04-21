@@ -1,7 +1,8 @@
-package com.javamasters.view;
+package com.javamasters.view.component;
 
 import com.javamasters.i18n.Resources;
 import com.javamasters.model.ISP;
+import com.javamasters.view.ReactiveUi;
 import com.javamasters.view.model.KeychainViewModel;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
@@ -24,7 +25,8 @@ public class SignInForm extends Container {
     private final Choice ispDropdown = new Choice();
     private final KeychainViewModel keychain;
 
-    public final BehaviorSubject<String> username = BehaviorSubject.create(),
+    public final BehaviorSubject<String>
+            username = BehaviorSubject.create(),
             password = BehaviorSubject.create();
 
     private final ReactiveUi rui = new ReactiveUi();

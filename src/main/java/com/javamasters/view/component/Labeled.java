@@ -1,4 +1,4 @@
-package com.javamasters.view;
+package com.javamasters.view.component;
 
 import javax.swing.*;
 import java.awt.*;

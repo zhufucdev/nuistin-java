@@ -16,12 +16,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class SettingsJsonProvider implements Settings {
     private final DataIO dataIO;
     private final Gson gson;
-    private final BehaviorSubject<String> language = BehaviorSubject.create();
-    private JsonObject obj;
+    private final BehaviorSubject<String>
+            language = BehaviorSubject.create(),
+            authServer = BehaviorSubject.create(),
+            pingAddress = BehaviorSubject.create(),
+            nic = BehaviorSubject.create();
+    private JsonObject delegated;
 
     public SettingsJsonProvider(DataIO dataIO) {
         this.dataIO = dataIO;
@@ -29,8 +34,8 @@ public class SettingsJsonProvider implements Settings {
     }
 
     private void ensureObj() {
-        if (obj != null) {
-           return;
+        if (delegated != null) {
+            return;
         }
         if (dataIO.created()) {
             try (var dis = dataIO.openInputStream()) {
@@ -52,16 +57,19 @@ public class SettingsJsonProvider implements Settings {
 
     private void updateFromStream(InputStream is) {
         var reader = new JsonReader(new InputStreamReader(is));
-        obj = gson.fromJson(reader, new TypeToken<JsonObject>() {
+        delegated = gson.fromJson(reader, new TypeToken<JsonObject>() {
         }.getType());
 
-        language.onNext(obj.get("language").getAsString());
+        language.onNext(delegated.get("language").getAsString());
+        authServer.onNext(delegated.get("authserver").getAsString());
+        pingAddress.onNext(delegated.get("ping").getAsString());
+        nic.onNext(delegated.get("nic").getAsString());
     }
 
     private boolean saveObj() throws IOException {
         if (dataIO.available()) {
             var writer = new JsonWriter(new OutputStreamWriter(dataIO.openOutputStream()));
-            gson.toJson(obj, writer);
+            gson.toJson(delegated, writer);
             writer.close();
             return true;
         }
@@ -77,9 +85,46 @@ public class SettingsJsonProvider implements Settings {
     @Override
     public Single<Boolean> setLanguage(String language) {
         this.language.onNext(language);
+        return dispatchWrite(obj -> obj.addProperty("language", language));
+    }
+
+    @Override
+    public Observable<String> authServer() {
+        return authServer;
+    }
+
+    @Override
+    public Single<Boolean> setAuthServer(String url) {
+        authServer.onNext(url);
+        return dispatchWrite(obj -> obj.addProperty("authserver", url));
+    }
+
+    @Override
+    public Observable<String> pingAddress() {
+        return pingAddress;
+    }
+
+    @Override
+    public Single<Boolean> setPingAddress(String host) {
+        pingAddress.onNext(host);
+        return dispatchWrite(obj -> obj.addProperty("ping", host));
+    }
+
+    @Override
+    public Observable<String> nic() {
+        return nic;
+    }
+
+    @Override
+    public Single<Boolean> setNic(String name) {
+        nic.onNext(name);
+        return dispatchWrite(obj -> obj.addProperty("nic", name));
+    }
+
+    private Single<Boolean> dispatchWrite(Consumer<JsonObject> applier) {
         return Single.create(emitter -> {
             ensureObj();
-            obj.addProperty("language", language);
+            applier.accept(delegated);
             try {
                 emitter.onSuccess(saveObj());
             } catch (IOException e) {

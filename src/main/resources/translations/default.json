@@ -10,5 +10,9 @@
   "campus": "Campus",
   "mobile": "China Mobile",
   "telecom": "China Telecom",
-  "unicom": "China Unicom"
+  "unicom": "China Unicom",
+  "state.unspecified": "Unknown",
+  "state.online": "Online",
+  "state.offline": "Offline",
+  "state.unauthenticated": "Unauthenticated"
 }
