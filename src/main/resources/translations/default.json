@@ -11,8 +11,12 @@
   "mobile": "China Mobile",
   "telecom": "China Telecom",
   "unicom": "China Unicom",
-  "state_unspecified": "Unknown",
+  "state_unspecified": "Waiting for network...",
   "state_online": "Online",
   "state_offline": "Offline",
-  "state_unauthenticated": "Unauthenticated"
+  "state_unauthenticated": "Unauthenticated",
+  "network_interface": "Network interface",
+  "network_options": "Network options",
+  "options": "Options",
+  "no_address": "no address"
 }

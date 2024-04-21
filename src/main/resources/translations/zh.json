@@ -11,8 +11,11 @@
   "mobile": "中国移动",
   "telecom": "中国电信",
   "unicom": "中国联通",
-  "state_unspecified": "未知状态",
+  "state_unspecified": "等待网络...",
   "state_online": "在线",
   "state_offline": "离线",
-  "state_unauthenticated": "未认证"
+  "state_unauthenticated": "未认证",
+  "network_interface": "网口",
+  "options": "选项",
+  "no_address": "没有地址"
 }
