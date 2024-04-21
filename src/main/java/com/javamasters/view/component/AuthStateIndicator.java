@@ -56,7 +56,7 @@ public class AuthStateIndicator extends Container {
                 return new Font("Arial", Font.PLAIN, 12);
             }
         };
-        rui.bindText(label, state.concatMap(s -> resources.getString("state." + s.name().toLowerCase())));
+        rui.bindText(label, state.concatMap(s -> resources.getString("state_" + s.name().toLowerCase())));
 
         setLayout(new GridBagLayout());
         add(dot);

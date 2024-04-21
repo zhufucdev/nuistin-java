@@ -11,8 +11,8 @@
   "mobile": "China Mobile",
   "telecom": "China Telecom",
   "unicom": "China Unicom",
-  "state.unspecified": "Unknown",
-  "state.online": "Online",
-  "state.offline": "Offline",
-  "state.unauthenticated": "Unauthenticated"
+  "state_unspecified": "Unknown",
+  "state_online": "Online",
+  "state_offline": "Offline",
+  "state_unauthenticated": "Unauthenticated"
 }

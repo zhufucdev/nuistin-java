@@ -11,8 +11,8 @@
   "mobile": "中国移动",
   "telecom": "中国电信",
   "unicom": "中国联通",
-  "state.unspecified": "未知状态",
-  "state.online": "在线",
-  "state.offline": "离线",
-  "state.unauthenticated": "未认证"
+  "state_unspecified": "未知状态",
+  "state_online": "在线",
+  "state_offline": "离线",
+  "state_unauthenticated": "未认证"
 }
