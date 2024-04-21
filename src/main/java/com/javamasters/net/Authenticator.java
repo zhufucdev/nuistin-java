@@ -16,6 +16,7 @@ import java.util.Objects;
 public class Authenticator implements Disposable {
     private final AsyncHttpClient httpClient = new AsyncHttpClient();
     private final String authUrl;
+    private String pingAddress;
     private final NetworkInterface nic;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
@@ -24,10 +25,8 @@ public class Authenticator implements Disposable {
 
     public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
         this(authUrl, networkInterface);
-        var ping = dispatchPing(pingAddress)
-                .subscribeOn(Schedulers.io())
-                .subscribe(state::onNext);
-        disposables.add(ping);
+        this.pingAddress = pingAddress;
+        tryDisposePing();
     }
 
     public Authenticator(String authUrl, NetworkInterface networkInterface) {
@@ -36,6 +35,15 @@ public class Authenticator implements Disposable {
         this.authUrl = authUrl;
         nic = networkInterface;
         state.onNext(State.Unspecified);
+    }
+
+    private void tryDisposePing() {
+        if (pingAddress != null) {
+            var ping = dispatchPing(pingAddress)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(state::onNext);
+            disposables.add(ping);
+        }
     }
 
     public Observable<State> getState() {
@@ -61,7 +69,8 @@ public class Authenticator implements Disposable {
                     } else {
                         state.onNext(State.Unauthenticated);
                     }
-                });
+                })
+                .doOnError(throwable -> tryDisposePing());
     }
 
     public Single<Boolean> logout(Account account) {
@@ -83,7 +92,8 @@ public class Authenticator implements Disposable {
                     if (loggedOut) {
                         state.onNext(State.Unauthenticated);
                     }
-                });
+                })
+                .doOnError(throwable -> tryDisposePing());
     }
 
     public Single<Boolean> logout() {
