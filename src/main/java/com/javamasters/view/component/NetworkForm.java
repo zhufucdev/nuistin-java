@@ -63,7 +63,11 @@ public class NetworkForm extends Container {
                 pingAddress.buffer(1, TimeUnit.SECONDS)
                         .map(buf -> buf.isEmpty() ? Optional.empty() : Optional.of(buf.get(buf.size() - 1)))
                         .subscribe(nextPing -> nextPing.ifPresent(
-                                        o -> settings.pingAddress().onNext((String) o)
+                                        o -> {
+                                            if (!settings.pingAddress().blockingFirst().equals(o)) {
+                                                settings.pingAddress().onNext((String) o);
+                                            }
+                                        }
                                 )
                         )
         );
