@@ -18,5 +18,6 @@
   "network_interface": "Network interface",
   "network_options": "Network options",
   "options": "Options",
-  "no_address": "no address"
+  "no_address": "no address",
+  "ping_address": "Ping address"
 }

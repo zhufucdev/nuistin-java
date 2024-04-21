@@ -4,6 +4,8 @@ import com.javamasters.data.Settings;
 import com.javamasters.i18n.Resources;
 import com.javamasters.view.ReactiveUi;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +13,8 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public class NetworkForm extends Container {
     private final CompositeDisposable disposables = new CompositeDisposable();
@@ -45,8 +49,27 @@ public class NetworkForm extends Container {
 
         niLabel.field.addItemListener(e -> {
             var ni = namedInterfaces.get((String) e.getItem());
-            settings.setNic(ni.getName()).blockingGet();
+            settings.setNic(ni.getName())
+                    .subscribeOn(Schedulers.io())
+                    .blockingGet();
         });
+
+        var pingLabel = new Labeled<>(new TextField());
+        rui.bindText(pingLabel.label, resources.getString("ping_address"));
+
+        BehaviorSubject<String> pingAddress = BehaviorSubject.create();
+        rui.twoWayBindText(pingLabel.field, pingAddress);
+        add(pingLabel);
+
+        disposables.addAll(
+                settings.pingAddress().first("").subscribe(pingAddress::onNext),
+                pingAddress.buffer(1, TimeUnit.SECONDS)
+                        .map(buf -> buf.isEmpty() ? Optional.empty() : Optional.of(buf.get(buf.size() - 1)))
+                        .subscribe(nextPing -> nextPing.ifPresent(
+                                        o -> settings.setPingAddress((String) o).blockingGet()
+                                )
+                        )
+        );
     }
 
     @Override

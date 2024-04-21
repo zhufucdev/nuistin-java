@@ -17,5 +17,6 @@
   "state_unauthenticated": "未认证",
   "network_interface": "网口",
   "options": "选项",
-  "no_address": "没有地址"
+  "no_address": "没有地址",
+  "ping_address": "Ping地址"
 }

@@ -99,7 +99,7 @@ public class MainWindow extends Frame {
         );
 
         signInButton.addActionListener(e -> {
-
+            
         });
         stateIndicator.optionsButton.addActionListener(e -> {
             var nw = new NetworkForm(library.getSettings(), library.getResources());
