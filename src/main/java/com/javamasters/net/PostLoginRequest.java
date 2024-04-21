@@ -6,6 +6,7 @@ import io.reactivex.rxjava3.functions.Function;
 
 import java.net.URI;
 import java.net.http.HttpRequest;
+import java.nio.charset.Charset;
 
 public class PostLoginRequest<T> implements Function<LoginRequest, Single<T>> {
     private final String authUrl;
@@ -24,7 +25,7 @@ public class PostLoginRequest<T> implements Function<LoginRequest, Single<T>> {
                 .uri(URI.create(authUrl + "/api/v1/login"))
                 .POST(JsonDelegating.bodyPublisher(req))
                 .build();
-        return httpClient.send(loginRequest, JsonDelegating.bodyHandler(responseClass));
+        return httpClient.send(loginRequest, JsonDelegating.bodyHandler(responseClass, Charset.forName("GBK")));
     }
 
     public static <K> PostLoginRequest<K> of(String authUrl, AsyncHttpClient httpClient, Class<K> responseClass) {

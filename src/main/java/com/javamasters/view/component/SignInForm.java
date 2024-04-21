@@ -9,20 +9,19 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignInForm extends Container {
     private final Choice ispDropdown = new Choice();
-    private final KeychainViewModel keychain;
-
-    public final BehaviorSubject<String>
-            username = BehaviorSubject.create(),
-            password = BehaviorSubject.create();
+    public final BehaviorSubject<String> username = BehaviorSubject.create(), password = BehaviorSubject.create();
+    public final BehaviorSubject<ISP> isp = BehaviorSubject.create();
 
     private final ReactiveUi rui = new ReactiveUi();
     private final CompositeDisposable disposables = new CompositeDisposable(rui);
+    private final Map<String, ISP> namedIsps = new HashMap<>();
 
     public SignInForm(KeychainViewModel keychain, Resources resources) {
-        this.keychain = keychain;
         var usernameLabel = new Labeled<>(new TextField()) {
             @Override
             public Insets getInsets() {
@@ -45,13 +44,37 @@ public class SignInForm extends Container {
         rui.twoWayBindText(usernameLabel.field, username);
         rui.twoWayBindPassword(passwordLabel.field, password);
 
-        disposables.add(
+        isp.onNext(ISP.Campus);
+        ispDropdown.addItemListener(e -> {
+            var next = namedIsps.get((String) e.getItem());
+            isp.onNext(next);
+        });
+
+        disposables.addAll(
                 resources.getTranslation().subscribe(t -> {
                     ispDropdown.removeAll();
                     for (int i = 0; i < ISP.values().length; i++) {
-                        ispDropdown.add(t.getString(ISP.values()[i].name().toLowerCase()));
+                        var isp = ISP.values()[i];
+                        var name = t.getString(isp.name().toLowerCase());
+                        ispDropdown.add(name);
+                        namedIsps.put(name, isp);
                     }
-                })
+                }),
+                keychain.getAccountIds()
+                        .flatMap(saved ->
+                                username.map(input ->
+                                        saved.stream().filter(id -> id.startsWith(input) && !id.equals(input))
+                                                .sorted())
+                        )
+                        .subscribe(potentials -> {
+                            var first = potentials.findFirst();
+                            if (first.isPresent()) {
+                                var inputTail = usernameLabel.field.getText().length();
+                                usernameLabel.field.setText(first.get());
+                                usernameLabel.field.setSelectionStart(inputTail + 1);
+                                usernameLabel.field.setSelectionEnd(first.get().length());
+                            }
+                        })
         );
     }
 

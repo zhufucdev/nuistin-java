@@ -7,6 +7,7 @@
   "username": "用户名",
   "password": "密码",
   "signin": "登录",
+  "signout": "退出登录",
   "campus": "校园网",
   "mobile": "中国移动",
   "telecom": "中国电信",
@@ -18,5 +19,9 @@
   "network_interface": "网口",
   "options": "选项",
   "no_address": "没有地址",
-  "ping_address": "Ping地址"
+  "ping_address": "Ping地址",
+  "sign_up_failed": "登录失败",
+  "sign_out_failed": "登出失败",
+  "check_password": "检查密码并重试",
+  "ok": "好的"
 }

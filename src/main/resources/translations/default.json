@@ -6,7 +6,8 @@
   "app_name": "nuistin",
   "username": "Username",
   "password": "Password",
-  "signin": "Sign in",
+  "signup": "Sign up",
+  "signout": "Sign out",
   "campus": "Campus",
   "mobile": "China Mobile",
   "telecom": "China Telecom",
@@ -19,5 +20,9 @@
   "network_options": "Network options",
   "options": "Options",
   "no_address": "no address",
-  "ping_address": "Ping address"
+  "ping_address": "Ping address",
+  "sign_up_failed": "Failed to sign up",
+  "sign_out_failed": "Failed to sign out",
+  "check_password": "Check your password and try again",
+  "ok": "OK"
 }

@@ -1,6 +1,6 @@
 {
   "language": "system",
-  "authserver": "10.255.255.46",
+  "authserver": "http://10.255.255.46",
   "ping": "baidu.com",
   "nic": ""
 }

@@ -27,6 +27,10 @@ public class ReactiveUi implements Disposable {
         disposables.add(observable.subscribe(frame::setTitle));
     }
 
+    public void bindTitle(Dialog dialog, Observable<String> observable) {
+        disposables.add(observable.subscribe(dialog::setTitle));
+    }
+
     public void bindEnabled(Component button, Observable<Boolean> observable) {
         disposables.add(observable.subscribe(button::setEnabled));
     }
@@ -104,15 +108,11 @@ public class ReactiveUi implements Disposable {
             this.component = component;
             this.listener = listener;
 
-            var addListenerFn =
-                    Arrays.stream(component.getClass().getMethods())
-                            .filter(s -> s.getName().equals("add" + name + "Listener")).findFirst();
+            var addListenerFn = Arrays.stream(component.getClass().getMethods()).filter(s -> s.getName().equals("add" + name + "Listener")).findFirst();
             if (addListenerFn.isEmpty()) {
                 throw new RuntimeException(new NoSuchMethodException("add" + name + "Listener"));
             }
-            var removeListenerFn =
-                    Arrays.stream(component.getClass().getMethods())
-                            .filter(s -> s.getName().equals("remove" + name + "Listener")).findFirst();
+            var removeListenerFn = Arrays.stream(component.getClass().getMethods()).filter(s -> s.getName().equals("remove" + name + "Listener")).findFirst();
             if (removeListenerFn.isEmpty()) {
                 throw new RuntimeException(new NoSuchMethodException("remove" + name + "Listener"));
             }
