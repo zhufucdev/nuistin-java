@@ -5,7 +5,6 @@ import com.javamasters.net.model.LoginRequest;
 import com.javamasters.net.model.LoginResponse;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.core.SingleEmitter;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
@@ -14,33 +13,25 @@ import io.reactivex.rxjava3.subjects.BehaviorSubject;
 import java.net.*;
 
 public class Authenticator implements Disposable {
-    private final AsyncHttpClient httpClient;
+    private final AsyncHttpClient httpClient = new AsyncHttpClient();
     private final String authUrl;
     private final NetworkInterface nic;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
-    private final BehaviorSubject<State> state;
+    private final BehaviorSubject<State> state = BehaviorSubject.create();
     private Account account;
 
     public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
         this(authUrl, networkInterface);
         var ping = dispatchPing(pingAddress)
                 .subscribeOn(Schedulers.io())
-                .subscribe(pong -> {
-                    if (pong) {
-                        state.onNext(State.Online);
-                    } else {
-                        state.onNext(State.Offline);
-                    }
-                });
+                .subscribe(state::onNext);
         disposables.add(ping);
     }
 
     public Authenticator(String authUrl, NetworkInterface networkInterface) {
         this.authUrl = authUrl;
-        httpClient = new AsyncHttpClient();
         nic = networkInterface;
-        state = BehaviorSubject.create();
         state.onNext(State.Unspecified);
     }
 
@@ -59,7 +50,6 @@ public class Authenticator implements Disposable {
                     } else {
                         state.onNext(State.Unauthenticated);
                     }
-                    state.onComplete();
                 });
     }
 
@@ -73,8 +63,7 @@ public class Authenticator implements Disposable {
                 .map(res -> res.code() == 200)
                 .doOnSuccess(loggedOut -> {
                     if (loggedOut) {
-                        state.onNext(State.Offline);
-                        state.onComplete();
+                        state.onNext(State.Unauthenticated);
                     }
                 });
     }
@@ -110,13 +99,13 @@ public class Authenticator implements Disposable {
         return dispatchLoginBase(account, "thirdauth", "1");
     }
 
-    private Single<Boolean> dispatchPing(String address) {
-        return Single.create((SingleEmitter<Boolean> emitter) -> {
-            try {
-                var addr = InetAddress.getByName(address);
-                emitter.onSuccess(addr.isReachable(nic, 32, 5000));
-            } catch (Exception e) {
-                emitter.onSuccess(false);
+    private Single<State> dispatchPing(String address) {
+        return Single.create(emitter -> {
+            if (Ping.canReach(address, nic)) {
+                emitter.onSuccess(State.Online);
+            } else {
+                var host = URI.create(authUrl).getHost();
+                emitter.onSuccess(Ping.canReach(host, nic) ? State.Unauthenticated : State.Offline);
             }
         });
     }
