@@ -9,7 +9,7 @@ import io.reactivex.rxjava3.core.SingleEmitter;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
-import io.reactivex.rxjava3.subjects.AsyncSubject;
+import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import java.net.*;
 
@@ -19,19 +19,18 @@ public class Authenticator implements Disposable {
     private final NetworkInterface nic;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
-    private final AsyncSubject<State> state;
+    private final BehaviorSubject<State> state;
     private Account account;
 
     public Authenticator(String authUrl, String pingAddress, NetworkInterface networkInterface) {
         this(authUrl, networkInterface);
-
-
         var ping = dispatchPing(pingAddress)
                 .subscribeOn(Schedulers.io())
                 .subscribe(pong -> {
-                    if (state.getValue() == null) {
+                    if (pong) {
                         state.onNext(State.Online);
-                        state.onComplete();
+                    } else {
+                        state.onNext(State.Offline);
                     }
                 });
         disposables.add(ping);
@@ -41,7 +40,8 @@ public class Authenticator implements Disposable {
         this.authUrl = authUrl;
         httpClient = new AsyncHttpClient();
         nic = networkInterface;
-        state = AsyncSubject.create();
+        state = BehaviorSubject.create();
+        state.onNext(State.Unspecified);
     }
 
     public Observable<State> getState() {
@@ -114,8 +114,8 @@ public class Authenticator implements Disposable {
         return Single.create((SingleEmitter<Boolean> emitter) -> {
             try {
                 var addr = InetAddress.getByName(address);
-                emitter.onSuccess(addr.isReachable(nic, 32, 10000));
-            } catch (UnknownHostException e) {
+                emitter.onSuccess(addr.isReachable(nic, 32, 5000));
+            } catch (Exception e) {
                 emitter.onSuccess(false);
             }
         });
