@@ -1,4 +1,6 @@
 package com.javamasters.net.model;
 
-public record LoginResponse(short code, String message, LoginResponseData data) {
+import java.util.Map;
+
+public record LoginResponse(short code, String message, Map<String, Object> data) {
 }

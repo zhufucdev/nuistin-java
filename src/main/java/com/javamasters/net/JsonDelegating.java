@@ -4,14 +4,14 @@ import com.google.gson.Gson;
 
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 
 public class JsonDelegating {
     private static final Gson gson = new Gson();
 
-    public static <T> HttpResponse.BodyHandler<T> bodyHandler(Class<T> clazz) {
+    public static <T> HttpResponse.BodyHandler<T> bodyHandler(Class<T> clazz, Charset charset) {
         return responseInfo -> HttpResponse.BodySubscribers.mapping(
-                HttpResponse.BodySubscribers.ofString(StandardCharsets.UTF_8),
+                HttpResponse.BodySubscribers.ofString(charset),
                 (str) -> gson.fromJson(str, clazz)
         );
     }
