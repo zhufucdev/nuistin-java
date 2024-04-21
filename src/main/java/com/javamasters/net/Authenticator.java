@@ -43,6 +43,7 @@ public class Authenticator implements Disposable {
     }
 
     public Single<Boolean> login(Account account) {
+        state.onNext(State.Unspecified);
         return dispatchVerifyRequest(account)
                 .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
                 .flatMap(res -> {
@@ -67,6 +68,7 @@ public class Authenticator implements Disposable {
         if (account == null) {
             return Single.error(new IllegalStateException("Never logged in"));
         }
+        state.onNext(State.Unspecified);
         return dispatchVerifyRequest(account)
                 .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
                 .flatMap(res -> {

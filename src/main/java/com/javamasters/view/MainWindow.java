@@ -51,7 +51,7 @@ public class MainWindow extends Frame {
                         throw new NoNetworkInterfaceException();
                     }
                     return new Authenticator(authserver, ping, nic);
-                });
+                }).cache();
         authState = authenticator.flatMap(Authenticator::getState);
         stateIndicator = new AuthStateIndicator(authState, library.getResources()) {
             @Override
@@ -116,7 +116,9 @@ public class MainWindow extends Frame {
         rui.bindTitle(this, library.getResources().getString("app_name"));
         rui.bindEnabled(
                 signInOutButton,
-                Observable.combineLatest(signInForm.username, signInForm.password, (username, password) -> !username.isEmpty() && !password.isEmpty())
+                Observable.combineLatest(signInForm.username, signInForm.password, authState,
+                                (username, password, state) -> !username.isEmpty() && !password.isEmpty() && state != Authenticator.State.Unspecified)
+                        .cache()
         );
 
         signInOutButton.addActionListener(e -> {
@@ -125,31 +127,9 @@ public class MainWindow extends Frame {
             var isp = signInForm.isp.getValue();
             var account = new Account(username, password, isp);
             if (signInMode) {
-                var signinDispose = authenticator.blockingFirst()
-                        .login(account)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                succeeded -> {
-                                    if (!succeeded) {
-                                        showErrorDialog(null, "sign_up_failed");
-                                    }
-                                },
-                                error -> showErrorDialog(error, "sign_up_failed")
-                        );
-                subscriptions.add(signinDispose);
+                signIn(account);
             } else {
-                var signoutDispose = authenticator.blockingFirst()
-                        .logout(account)
-                        .subscribeOn(Schedulers.io())
-                        .subscribe(
-                                succeeded -> {
-                                    if (!succeeded) {
-                                        showErrorDialog(null, "sign_out_failed");
-                                    }
-                                },
-                                error -> showErrorDialog(error, "sign_out_failed")
-                        );
-                subscriptions.add(signoutDispose);
+                signOut(account);
             }
         });
         stateIndicator.optionsButton.addActionListener(e -> {
@@ -166,6 +146,40 @@ public class MainWindow extends Frame {
                 }
             });
         });
+    }
+
+    private void signIn(Account account) {
+        var signinDispose = authenticator
+                .flatMapSingle(auth -> auth.login(account))
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        succeeded -> {
+                            if (!succeeded) {
+                                showErrorDialog(null, "sign_up_failed");
+                            } else {
+                                subscriptions.add(keychainViewModel
+                                        .addAccount(account)
+                                        .subscribe()
+                                );
+                            }
+                        },
+                        error -> showErrorDialog(error, "sign_up_failed"));
+        subscriptions.add(signinDispose);
+    }
+
+    private void signOut(Account account) {
+        var signoutDispose = authenticator
+                .flatMapSingle(auth -> auth.logout(account))
+                .subscribeOn(Schedulers.io())
+                .subscribe(
+                        succeeded -> {
+                            if (!succeeded) {
+                                showErrorDialog(null, "sign_out_failed");
+                            }
+                        },
+                        error -> showErrorDialog(error, "sign_out_failed")
+                );
+        subscriptions.add(signoutDispose);
     }
 
     private void showErrorDialog(Throwable error, String titleResId) {

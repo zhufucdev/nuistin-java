@@ -11,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SignInForm extends Container {
     private final Choice ispDropdown = new Choice();
@@ -61,18 +62,18 @@ public class SignInForm extends Container {
                     }
                 }),
                 keychain.getAccountIds()
-                        .flatMap(saved ->
-                                username.map(input ->
-                                        saved.stream().filter(id -> id.startsWith(input) && !id.equals(input))
-                                                .sorted())
+                        .flatMap(saved -> username.map(input ->
+                                input.isEmpty() ? Optional.<String>empty() :
+                                saved.stream().filter(id -> id.startsWith(input) && !id.equals(input))
+                                        .sorted()
+                                        .findFirst())
                         )
-                        .subscribe(potentials -> {
-                            var first = potentials.findFirst();
-                            if (first.isPresent()) {
+                        .subscribe(potential -> {
+                            if (potential.isPresent()) {
                                 var inputTail = usernameLabel.field.getText().length();
-                                usernameLabel.field.setText(first.get());
-                                usernameLabel.field.setSelectionStart(inputTail + 1);
-                                usernameLabel.field.setSelectionEnd(first.get().length());
+                                usernameLabel.field.setText(potential.get());
+                                usernameLabel.field.setSelectionStart(inputTail);
+                                usernameLabel.field.setSelectionEnd(potential.get().length());
                             }
                         })
         );
