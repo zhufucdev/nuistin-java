@@ -5,6 +5,7 @@ import com.javamasters.net.Authenticator;
 import com.javamasters.net.DefaultNetworkInterface;
 import com.javamasters.net.NoNetworkInterfaceException;
 import com.javamasters.view.component.AuthStateIndicator;
+import com.javamasters.view.component.NetworkForm;
 import com.javamasters.view.component.SignInForm;
 import com.javamasters.view.model.KeychainViewModel;
 import io.reactivex.rxjava3.core.Observable;
@@ -12,11 +13,10 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
 import java.net.NetworkInterface;
 
-public class MainWindow extends Frame implements WindowListener {
+public class MainWindow extends Frame {
     private final Library library;
     private final Button signInButton = new Button();
     private final SignInForm signInForm;
@@ -44,7 +44,7 @@ public class MainWindow extends Frame implements WindowListener {
                     }
                     return new Authenticator(authserver, ping, nic);
                 });
-        stateIndicator = new AuthStateIndicator(authenticator.concatMap(Authenticator::getState), library.getResources()) {
+        stateIndicator = new AuthStateIndicator(authenticator.flatMap(Authenticator::getState), library.getResources()) {
             @Override
             public Insets getInsets() {
                 return new Insets(0, 10, 4, 10);
@@ -69,6 +69,7 @@ public class MainWindow extends Frame implements WindowListener {
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
         header.add(signInForm);
         add(header, fillWidth);
+        add(signInButton, fillWidth);
 
         var fillHeight = new GridBagConstraints();
         fillHeight.fill = GridBagConstraints.HORIZONTAL;
@@ -77,13 +78,18 @@ public class MainWindow extends Frame implements WindowListener {
 
         add(new Component() {
         }, fillHeight);
-        add(signInButton, fillWidth);
         add(new JToolBar.Separator(), fillWidth);
         add(stateIndicator, fillWidth);
 
         setSize(400, 300);
-        setMinimumSize(new Dimension(400, 240));
-        addWindowListener(this);
+        setMinimumSize(new Dimension(400, 250));
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                dispose();
+                super.windowClosing(e);
+            }
+        });
 
         rui.bindLabel(signInButton, library.getResources().getString("signin"));
         rui.bindTitle(this, library.getResources().getString("app_name"));
@@ -95,38 +101,20 @@ public class MainWindow extends Frame implements WindowListener {
         signInButton.addActionListener(e -> {
 
         });
-    }
-
-    @Override
-    public void windowOpened(WindowEvent e) {
-    }
-
-    @Override
-    public void windowClosing(WindowEvent e) {
-        dispose();
-    }
-
-    @Override
-    public void windowClosed(WindowEvent e) {
-    }
-
-    @Override
-    public void windowIconified(WindowEvent e) {
-
-    }
-
-    @Override
-    public void windowDeiconified(WindowEvent e) {
-
-    }
-
-    @Override
-    public void windowActivated(WindowEvent e) {
-
-    }
-
-    @Override
-    public void windowDeactivated(WindowEvent e) {
+        stateIndicator.optionsButton.addActionListener(e -> {
+            var nw = new NetworkForm(library.getSettings(), library.getResources());
+            var dialog = new Dialog(MainWindow.this);
+            dialog.add(nw);
+            dialog.setSize(300, 200);
+            dialog.setResizable(false);
+            dialog.setVisible(true);
+            dialog.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    dialog.dispose();
+                }
+            });
+        });
     }
 
     @Override

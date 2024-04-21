@@ -11,6 +11,7 @@ import java.awt.*;
 public class AuthStateIndicator extends Container {
     private Authenticator.State currentState = Authenticator.State.Unspecified;
     private final CompositeDisposable subscriptions = new CompositeDisposable();
+    public final Button optionsButton;
 
     public AuthStateIndicator(Observable<Authenticator.State> state, Resources resources) {
         var dot = new Canvas() {
@@ -30,11 +31,7 @@ public class AuthStateIndicator extends Container {
                         g.setColor(Color.YELLOW);
                         break;
                 }
-                if (currentState == Authenticator.State.Unspecified) {
-                    g.drawOval(0, 0, getWidth(), getHeight());
-                } else {
-                    g.fillOval(0, 0, getWidth(), getHeight());
-                }
+                g.fillOval(0, 0, getWidth(), getHeight());
             }
 
             @Override
@@ -56,11 +53,12 @@ public class AuthStateIndicator extends Container {
                 return new Font("Arial", Font.PLAIN, 12);
             }
         };
-        rui.bindText(label, state.concatMap(s -> resources.getString("state_" + s.name().toLowerCase())));
+        rui.bindText(label, state.map(s -> "state_" + s.name().toLowerCase()).flatMap(resources::getString));
 
-        setLayout(new GridBagLayout());
-        add(dot);
-        add(new Component() {
+        var statePanel = new Panel();
+        statePanel.setLayout(new GridBagLayout());
+        statePanel.add(dot);
+        statePanel.add(new Component() {
             @Override
             public Dimension getPreferredSize() {
                 return new Dimension(4, 0);
@@ -70,7 +68,14 @@ public class AuthStateIndicator extends Container {
         fillWidth.fill = GridBagConstraints.HORIZONTAL;
         fillWidth.weightx = 1;
         fillWidth.gridx = 2;
-        add(label, fillWidth);
+        statePanel.add(label, fillWidth);
+
+        optionsButton = new Button();
+        rui.bindLabel(optionsButton, resources.getString("options"));
+
+        setLayout(new BorderLayout());
+        add(statePanel);
+        add(optionsButton, BorderLayout.EAST);
     }
 
     @Override
