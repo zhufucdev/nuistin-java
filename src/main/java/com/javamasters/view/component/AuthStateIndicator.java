@@ -43,6 +43,7 @@ public class AuthStateIndicator extends Container {
         subscriptions.add(state.subscribe(next -> {
             currentState = next;
             dot.invalidate();
+            dot.repaint();
         }));
         var rui = new ReactiveUi();
         subscriptions.add(rui);
