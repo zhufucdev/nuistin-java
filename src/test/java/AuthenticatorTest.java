@@ -19,17 +19,15 @@ class AuthenticatorTest {
     void login_logout() throws SocketException {
         var auth = new Authenticator(server, NetworkInterface.getByName(nicName));
         assertTrue(auth.login(new Account(id, password, isp)).blockingGet());
-        assertEquals(Authenticator.State.Online, auth.getState().blockingLast());
-
+        assertEquals(Authenticator.State.Online, auth.getState().blockingFirst());
         assertTrue(auth.logout().blockingGet());
-
         auth.dispose();
     }
 
     @Test
     void state() throws SocketException {
         var auth = new Authenticator(server, "google.com", NetworkInterface.getByName(nicName));
-        assertNotEquals(Authenticator.State.Unspecified, auth.getState().blockingFirst());
+        assertNotEquals(Authenticator.State.Unspecified, auth.getState().skip(1).blockingFirst());
         auth.dispose();
     }
 }
