@@ -11,6 +11,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import java.net.*;
+import java.util.Objects;
 
 public class Authenticator implements Disposable {
     private final AsyncHttpClient httpClient = new AsyncHttpClient();
@@ -30,6 +31,8 @@ public class Authenticator implements Disposable {
     }
 
     public Authenticator(String authUrl, NetworkInterface networkInterface) {
+        Objects.requireNonNull(authUrl, "Authentication server cannot be null");
+        Objects.requireNonNull(networkInterface, "NetworkInterface cannot be null");
         this.authUrl = authUrl;
         nic = networkInterface;
         state.onNext(State.Unspecified);
@@ -40,8 +43,15 @@ public class Authenticator implements Disposable {
     }
 
     public Single<Boolean> login(Account account) {
-        return dispatchLoginRequest(account)
-                .concatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+        return dispatchVerifyRequest(account)
+                .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+                .flatMap(res -> {
+                    if (res.code() != 200) {
+                        return Single.error(new NoSuchAccountException(res));
+                    }
+                    return dispatchLoginRequest(account);
+                })
+                .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
                 .map(res -> res.code() == 200)
                 .doOnSuccess(loggedIn -> {
                     if (loggedIn) {
@@ -57,8 +67,15 @@ public class Authenticator implements Disposable {
         if (account == null) {
             return Single.error(new IllegalStateException("Never logged in"));
         }
-        return dispatchLogoutRequest(account)
-                .concatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+        return dispatchVerifyRequest(account)
+                .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
+                .flatMap(res -> {
+                    if (res.code() != 200) {
+                        return Single.error(new NoSuchAccountException(res));
+                    }
+                    return dispatchLogoutRequest(account);
+                })
+                .flatMap(PostLoginRequest.of(authUrl, httpClient, LoginResponse.class))
                 .map(res -> res.code() == 200)
                 .doOnSuccess(loggedOut -> {
                     if (loggedOut) {
@@ -71,7 +88,7 @@ public class Authenticator implements Disposable {
         return logout(account);
     }
 
-    private Single<LoginRequest> dispatchLoginBase(Account account, String pagesign, String ifautologin) {
+    private Single<LoginRequest> dispatchLoginBase(Account account, String channel, String pagesign, String ifautologin) {
         var iter = nic.getInetAddresses();
         if (!iter.hasMoreElements()) {
             return Single.error(new NullPointerException("No ip addresses found"));
@@ -89,17 +106,21 @@ public class Authenticator implements Disposable {
 
         return Single.just(new LoginRequest(
                 account.id(), account.password(),
-                ifautologin, String.valueOf(account.isp().channel),
+                ifautologin, channel,
                 pagesign, addr.getHostAddress()
         ));
     }
 
+    private Single<LoginRequest> dispatchVerifyRequest(Account account) {
+        return dispatchLoginBase(account, "_GET", "firstauth", "0");
+    }
+
     private Single<LoginRequest> dispatchLoginRequest(Account account) {
-        return dispatchLoginBase(account, "secondauth", "0");
+        return dispatchLoginBase(account, String.valueOf(account.isp().channel), "secondauth", "0");
     }
 
     private Single<LoginRequest> dispatchLogoutRequest(Account account) {
-        return dispatchLoginBase(account, "thirdauth", "1");
+        return dispatchLoginBase(account, String.valueOf(account.isp().channel), "thirdauth", "1");
     }
 
     private Single<State> dispatchPing(String address) {
