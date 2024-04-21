@@ -7,9 +7,11 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.javamasters.data.Settings;
 import com.javamasters.data.io.DataIO;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +20,7 @@ import java.io.OutputStreamWriter;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public class SettingsJsonProvider implements Settings {
+public class SettingsJsonProvider implements Settings, Disposable {
     private final DataIO dataIO;
     private final Gson gson;
     private final BehaviorSubject<String>
@@ -26,11 +28,23 @@ public class SettingsJsonProvider implements Settings {
             authServer = BehaviorSubject.create(),
             pingAddress = BehaviorSubject.create(),
             nic = BehaviorSubject.create();
+    private final CompositeDisposable subscriptions = new CompositeDisposable();
     private JsonObject delegated;
 
     public SettingsJsonProvider(DataIO dataIO) {
         this.dataIO = dataIO;
         gson = new Gson();
+
+        subscriptions.addAll(
+                language.subscribeOn(Schedulers.io())
+                        .subscribe(l -> writeJson(obj -> obj.addProperty("language", l))),
+                authServer.subscribeOn(Schedulers.io())
+                        .subscribe(a -> writeJson(obj -> obj.addProperty("authserver", a))),
+                pingAddress.subscribeOn(Schedulers.io())
+                        .subscribe(p -> writeJson(obj -> obj.addProperty("ping", p))),
+                nic.subscribeOn(Schedulers.io())
+                        .subscribe(n -> writeJson(obj -> obj.addProperty("nic", n)))
+        );
     }
 
     private void ensureObj() {
@@ -77,59 +91,46 @@ public class SettingsJsonProvider implements Settings {
     }
 
     @Override
-    public Observable<String> preferredLanguage() {
+    public Subject<String> preferredLanguage() {
         ensureObj();
         return language;
     }
 
     @Override
-    public Single<Boolean> setLanguage(String language) {
-        this.language.onNext(language);
-        return dispatchWrite(obj -> obj.addProperty("language", language));
-    }
-
-    @Override
-    public Observable<String> authServer() {
+    public Subject<String> authServer() {
+        ensureObj();
         return authServer;
     }
 
     @Override
-    public Single<Boolean> setAuthServer(String url) {
-        authServer.onNext(url);
-        return dispatchWrite(obj -> obj.addProperty("authserver", url));
-    }
-
-    @Override
-    public Observable<String> pingAddress() {
+    public Subject<String> pingAddress() {
+        ensureObj();
         return pingAddress;
     }
 
     @Override
-    public Single<Boolean> setPingAddress(String host) {
-        pingAddress.onNext(host);
-        return dispatchWrite(obj -> obj.addProperty("ping", host));
-    }
-
-    @Override
-    public Observable<String> nic() {
+    public Subject<String> nic() {
+        ensureObj();
         return nic;
     }
 
-    @Override
-    public Single<Boolean> setNic(String name) {
-        nic.onNext(name);
-        return dispatchWrite(obj -> obj.addProperty("nic", name));
+    private void writeJson(Consumer<JsonObject> applier) {
+        ensureObj();
+        applier.accept(delegated);
+        try {
+            saveObj();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private Single<Boolean> dispatchWrite(Consumer<JsonObject> applier) {
-        return Single.create(emitter -> {
-            ensureObj();
-            applier.accept(delegated);
-            try {
-                emitter.onSuccess(saveObj());
-            } catch (IOException e) {
-                emitter.onError(e);
-            }
-        });
+    @Override
+    public boolean isDisposed() {
+        return subscriptions.isDisposed();
+    }
+
+    @Override
+    public void dispose() {
+        subscriptions.dispose();
     }
 }

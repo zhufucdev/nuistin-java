@@ -4,7 +4,6 @@ import com.javamasters.data.Settings;
 import com.javamasters.i18n.Resources;
 import com.javamasters.view.ReactiveUi;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.BehaviorSubject;
 
 import javax.swing.*;
@@ -49,9 +48,7 @@ public class NetworkForm extends Container {
 
         niLabel.field.addItemListener(e -> {
             var ni = namedInterfaces.get((String) e.getItem());
-            settings.setNic(ni.getName())
-                    .subscribeOn(Schedulers.io())
-                    .blockingGet();
+            settings.nic().onNext(ni.getName());
         });
 
         var pingLabel = new Labeled<>(new TextField());
@@ -66,7 +63,7 @@ public class NetworkForm extends Container {
                 pingAddress.buffer(1, TimeUnit.SECONDS)
                         .map(buf -> buf.isEmpty() ? Optional.empty() : Optional.of(buf.get(buf.size() - 1)))
                         .subscribe(nextPing -> nextPing.ifPresent(
-                                        o -> settings.setPingAddress((String) o).blockingGet()
+                                        o -> settings.pingAddress().onNext((String) o)
                                 )
                         )
         );
