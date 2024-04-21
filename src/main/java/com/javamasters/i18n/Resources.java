@@ -20,7 +20,7 @@ public class Resources implements Disposable {
                 next = Translation.ofName(l);
             }
             if (next == null) {
-                throw new NullPointerException("No such translation: " + l);
+                next = new Translation("translations/default.json");
             }
             translation.onNext(next);
         });
